@@ -4,48 +4,61 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"log"
 	"net/http"
 	"regexp"
+	"strconv"
+	"time"
 )
 
+type Video struct {
+	ID        string `json:"id"`
+	Duration  int    `json:"duration"`  // Duration in seconds
+	StartTime int    `json:"start_time"` // Start time in seconds from midnight UTC
+}
+
 type Playlist struct {
-	VideoIDs []string `json:"video_ids"`
+	Videos []Video `json:"videos"`
 }
 
 func main() {
 	playlistURL := "https://www.youtube.com/playlist?list=PLsPSzW_LUV5EywBUnErba6ZNynjsdr99t"
 	videoIDs, err := getUniqueVideoIDsFromPlaylist(playlistURL)
 	if err != nil {
-		fmt.Println("Error:", err)
-		return
+		log.Fatalf("Error getting video IDs: %v", err)
 	}
 
-	playlist := Playlist{VideoIDs: videoIDs}
+	videos, err := getVideoDetails(videoIDs)
+	if err != nil {
+		log.Fatalf("Error getting video details: %v", err)
+	}
+
+	calculateStartTimes(videos)
+
+	playlist := Playlist{Videos: videos}
 	jsonData, err := json.MarshalIndent(playlist, "", "  ")
 	if err != nil {
-		fmt.Println("Error marshaling JSON:", err)
-		return
+		log.Fatalf("Error marshaling JSON: %v", err)
 	}
 
 	err = ioutil.WriteFile("docs/playlist.json", jsonData, 0644)
 	if err != nil {
-		fmt.Println("Error writing JSON file:", err)
-		return
+		log.Fatalf("Error writing JSON file: %v", err)
 	}
 
-	fmt.Println("Unique playlist video IDs have been stored in docs/playlist.json")
+	fmt.Printf("Updated playlist with %d embeddable video details has been stored in playlist.json\n", len(videos))
 }
 
 func getUniqueVideoIDsFromPlaylist(playlistURL string) ([]string, error) {
 	resp, err := http.Get(playlistURL)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("error fetching playlist: %v", err)
 	}
 	defer resp.Body.Close()
 
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("error reading response body: %v", err)
 	}
 
 	content := string(body)
@@ -65,4 +78,80 @@ func getUniqueVideoIDsFromPlaylist(playlistURL string) ([]string, error) {
 	}
 
 	return videoIDs, nil
+}
+
+func getVideoDetails(videoIDs []string) ([]Video, error) {
+	var videos []Video
+	client := &http.Client{Timeout: 10 * time.Second}
+
+	for _, id := range videoIDs {
+		if isEmbeddable(id, client) {
+			videoURL := fmt.Sprintf("https://www.youtube.com/watch?v=%s", id)
+			resp, err := client.Get(videoURL)
+			if err != nil {
+				fmt.Printf("Error fetching video %s: %v. Skipping.\n", id, err)
+				continue
+			}
+			defer resp.Body.Close()
+
+			body, err := ioutil.ReadAll(resp.Body)
+			if err != nil {
+				fmt.Printf("Error reading response body for video %s: %v. Skipping.\n", id, err)
+				continue
+			}
+
+			content := string(body)
+
+			durationRegex := regexp.MustCompile(`"lengthSeconds":"(\d+)"`)
+			match := durationRegex.FindStringSubmatch(content)
+
+			if len(match) > 1 {
+				duration, err := strconv.Atoi(match[1])
+				if err != nil {
+					fmt.Printf("Error parsing duration for video %s: %v. Skipping.\n", id, err)
+					continue
+				}
+
+				videos = append(videos, Video{
+					ID:       id,
+					Duration: duration,
+				})
+				fmt.Printf("Added video %s with duration %d seconds.\n", id, duration)
+			} else {
+				fmt.Printf("Could not find duration for video %s. Skipping.\n", id)
+			}
+		} else {
+			fmt.Printf("Video %s is not embeddable. Skipping.\n", id)
+		}
+	}
+
+	return videos, nil
+}
+
+func isEmbeddable(videoID string, client *http.Client) bool {
+	oembedURL := fmt.Sprintf("https://www.youtube.com/oembed?url=https://www.youtube.com/watch?v=%s&format=json", videoID)
+	resp, err := client.Get(oembedURL)
+	if err != nil {
+		fmt.Printf("Error checking embeddability for video %s: %v\n", videoID, err)
+		return false
+	}
+	defer resp.Body.Close()
+
+	return resp.StatusCode == http.StatusOK
+}
+
+func calculateStartTimes(videos []Video) {
+	totalDuration := 0
+	for _, video := range videos {
+		totalDuration += video.Duration
+	}
+
+	secondsInDay := 24 * 60 * 60
+	scaleFactor := float64(secondsInDay) / float64(totalDuration)
+
+	currentStartTime := 0
+	for i := range videos {
+		videos[i].StartTime = currentStartTime
+		currentStartTime += int(float64(videos[i].Duration) * scaleFactor)
+	}
 }

@@ -6,7 +6,7 @@ async function loadPlaylist() {
     try {
         const response = await fetch('playlist.json');
         const data = await response.json();
-        playlist = data.video_ids;
+        playlist = data.videos;
         console.log('Playlist loaded:', playlist);
     } catch (error) {
         console.error('Error loading playlist:', error);
@@ -14,8 +14,8 @@ async function loadPlaylist() {
 }
 
 function initializePlayer() {
-    const videoContainer = document.querySelector('.video-container');
-    loadVideo(videoContainer, playlist[currentVideoIndex]);
+    synchronizePlayback();
+    setInterval(synchronizePlayback, 60000); // Sync every minute
 
     window.addEventListener('message', (event) => {
         if (event.data && event.data.info === 'endVideoPlaying') {
@@ -24,7 +24,27 @@ function initializePlayer() {
     });
 }
 
-function loadVideo(container, videoId) {
+function synchronizePlayback() {
+    const now = new Date();
+    const secondsSinceMidnightUTC = (now.getUTCHours() * 3600) + (now.getUTCMinutes() * 60) + now.getUTCSeconds();
+
+    let videoToPlay = playlist[0];
+    for (let i = 0; i < playlist.length; i++) {
+        if (secondsSinceMidnightUTC >= playlist[i].start_time) {
+            videoToPlay = playlist[i];
+            currentVideoIndex = i;
+        } else {
+            break;
+        }
+    }
+
+    const secondsIntoVideo = secondsSinceMidnightUTC - videoToPlay.start_time;
+    
+    const videoContainer = document.querySelector('.video-container');
+    loadVideo(videoContainer, videoToPlay.id, secondsIntoVideo);
+}
+
+function loadVideo(container, videoId, startTime = 0) {
     // Remove any existing iframe
     const existingIframe = container.querySelector('iframe');
     if (existingIframe) {
@@ -47,6 +67,7 @@ function loadVideo(container, videoId) {
     embedUrl.searchParams.set('iv_load_policy', '3');
     embedUrl.searchParams.set('playsinline', '1');
     embedUrl.searchParams.set('enablejsapi', '1');
+    embedUrl.searchParams.set('start', Math.floor(startTime).toString());
 
     iframe.src = embedUrl.toString();
 
@@ -64,7 +85,7 @@ function loadVideo(container, videoId) {
 function playNextVideo() {
     currentVideoIndex = (currentVideoIndex + 1) % playlist.length;
     const videoContainer = document.querySelector('.video-container');
-    loadVideo(videoContainer, playlist[currentVideoIndex]);
+    loadVideo(videoContainer, playlist[currentVideoIndex].id);
 }
 
 function setupAudioPlayer() {

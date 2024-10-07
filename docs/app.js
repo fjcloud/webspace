@@ -68,7 +68,7 @@ function playNextVideo() {
 }
 
 function setupAudioPlayer() {
-    audioPlayer = new Audio('http://pbbradio.com:8001/128');
+    audioPlayer = new Audio('https://pbbradio.com:8443/128');
     audioPlayer.volume = 0.5;
 }
 

@@ -15,7 +15,6 @@ async function loadPlaylist() {
 
 function initializePlayer() {
     synchronizePlayback();
-    setInterval(synchronizePlayback, 60000); // Sync every minute
 
     window.addEventListener('message', (event) => {
         if (event.data && event.data.info === 'endVideoPlaying') {

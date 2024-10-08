@@ -89,23 +89,53 @@ function playNextVideo() {
 }
 
 function setupAudioPlayer() {
-    audioPlayer = new Audio('https://pbbradio.com:8443/128');
-    audioPlayer.volume = 0.5;
+    if (Hls.isSupported()) {
+        audioPlayer = new Hls();
+        audioPlayer.loadSource('https://stream.nightride.fm:8443/ebsm/ebsm.m3u8');
+        audioPlayer.attachMedia(document.createElement('audio'));
+        audioPlayer.on(Hls.Events.MANIFEST_PARSED, function() {
+            console.log('HLS manifest loaded');
+        });
+    } else if (audio.canPlayType('application/vnd.apple.mpegurl')) {
+        audioPlayer = document.createElement('audio');
+        audioPlayer.src = 'https://stream.nightride.fm:8443/ebsm/ebsm.m3u8';
+        audioPlayer.addEventListener('loadedmetadata', function() {
+            console.log('HLS audio loaded');
+        });
+    } else {
+        console.error('HLS is not supported on this browser');
+    }
 }
 
 function startAudio() {
-    audioPlayer.play().catch(error => {
-        console.log('Audio playback failed:', error);
-    });
-}
-
-function toggleAudio() {
-    if (audioPlayer.paused) {
+    if (audioPlayer instanceof Hls) {
+        audioPlayer.media.play().catch(error => {
+            console.log('Audio playback failed:', error);
+        });
+    } else if (audioPlayer instanceof HTMLAudioElement) {
         audioPlayer.play().catch(error => {
             console.log('Audio playback failed:', error);
         });
-    } else {
-        audioPlayer.pause();
+    }
+}
+
+function toggleAudio() {
+    if (audioPlayer instanceof Hls) {
+        if (audioPlayer.media.paused) {
+            audioPlayer.media.play().catch(error => {
+                console.log('Audio playback failed:', error);
+            });
+        } else {
+            audioPlayer.media.pause();
+        }
+    } else if (audioPlayer instanceof HTMLAudioElement) {
+        if (audioPlayer.paused) {
+            audioPlayer.play().catch(error => {
+                console.log('Audio playback failed:', error);
+            });
+        } else {
+            audioPlayer.pause();
+        }
     }
 }
 

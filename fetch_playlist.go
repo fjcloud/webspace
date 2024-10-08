@@ -22,7 +22,7 @@ type Playlist struct {
 }
 
 func main() {
-	playlistURL := "https://www.youtube.com/playlist?list=PLx8w5arTJ_r-djaenkTYbH_930CqSL6CX"
+	playlistURL := "https://www.youtube.com/playlist?list=PLBFa2yUBFRr5Qb-ZQVjMdXbTDJRI7NPrh"
 	videoIDs, err := getUniqueVideoIDsFromPlaylist(playlistURL)
 	if err != nil {
 		log.Fatalf("Error getting video IDs: %v", err)

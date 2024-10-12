@@ -152,7 +152,7 @@ function updateMetadataDisplay(metadata) {
     const metadataContainer = document.getElementById('stream-metadata');
     metadataContainer.innerHTML = `
         <p>Radio : nightride.fm</p>
-        <p>Track: ${metadata.title}</p>
+        <p>Track : ${metadata.title}</p>
         <p>Artist: ${metadata.artist}</p>
     `;
 }

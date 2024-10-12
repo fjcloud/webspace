@@ -2,6 +2,8 @@ let playlist = [];
 let currentVideoIndex = 0;
 let audioPlayer;
 
+const PLAYLIST_START_TIME = new Date('2024-01-01T00:00:00Z').getTime();
+
 async function loadPlaylist() {
     try {
         const response = await fetch('playlist.json');
@@ -11,6 +13,11 @@ async function loadPlaylist() {
     } catch (error) {
         console.error('Error loading playlist:', error);
     }
+}
+
+function getPlaylistDuration() {
+    const lastVideo = playlist[playlist.length - 1];
+    return lastVideo.start_time + lastVideo.duration;
 }
 
 function initializePlayer() {
@@ -25,11 +32,15 @@ function initializePlayer() {
 
 function synchronizePlayback() {
     const now = new Date();
-    const secondsSinceMidnightUTC = (now.getUTCHours() * 3600) + (now.getUTCMinutes() * 60) + now.getUTCSeconds();
+    const millisecondsSinceStart = now.getTime() - PLAYLIST_START_TIME;
+    const secondsSinceStart = Math.floor(millisecondsSinceStart / 1000);
+    
+    const playlistDuration = getPlaylistDuration();
+    const secondsIntoCurrentLoop = secondsSinceStart % playlistDuration;
 
     let videoToPlay = playlist[0];
     for (let i = 0; i < playlist.length; i++) {
-        if (secondsSinceMidnightUTC >= playlist[i].start_time) {
+        if (secondsIntoCurrentLoop >= playlist[i].start_time) {
             videoToPlay = playlist[i];
             currentVideoIndex = i;
         } else {
@@ -37,7 +48,7 @@ function synchronizePlayback() {
         }
     }
 
-    const secondsIntoVideo = secondsSinceMidnightUTC - videoToPlay.start_time;
+    const secondsIntoVideo = secondsIntoCurrentLoop - videoToPlay.start_time;
     
     const videoContainer = document.querySelector('.video-container');
     loadVideo(videoContainer, videoToPlay.id, secondsIntoVideo);

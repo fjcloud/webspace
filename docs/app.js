@@ -77,6 +77,7 @@ function loadVideo(container, videoId, startTime = 0) {
     embedUrl.searchParams.set('iv_load_policy', '3');
     embedUrl.searchParams.set('playsinline', '1');
     embedUrl.searchParams.set('enablejsapi', '1');
+    embedUrl.searchParams.set('cc_load_policy', '0');
     embedUrl.searchParams.set('start', Math.floor(startTime).toString());
 
     iframe.src = embedUrl.toString();

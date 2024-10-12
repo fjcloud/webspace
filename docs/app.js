@@ -129,24 +129,32 @@ function startAudio() {
     }
 }
 
-function toggleAudio() {
-    if (audioPlayer instanceof Hls) {
-        if (audioPlayer.media.paused) {
-            audioPlayer.media.play().catch(error => {
-                console.log('Audio playback failed:', error);
-            });
-        } else {
-            audioPlayer.media.pause();
+function setupMetadataEventSource() {
+    metadataEventSource = new EventSource('https://nightride.fm/meta');
+
+    metadataEventSource.onmessage = function(event) {
+        const data = JSON.parse(event.data);
+        const ebsmData = data.find(item => item.station === 'ebsm');
+        if (ebsmData) {
+            updateMetadataDisplay(ebsmData);
         }
-    } else if (audioPlayer instanceof HTMLAudioElement) {
-        if (audioPlayer.paused) {
-            audioPlayer.play().catch(error => {
-                console.log('Audio playback failed:', error);
-            });
-        } else {
-            audioPlayer.pause();
-        }
-    }
+    };
+
+    metadataEventSource.onerror = function(error) {
+        console.error('EventSource failed:', error);
+        metadataEventSource.close();
+        // Attempt to reconnect after a delay
+        setTimeout(setupMetadataEventSource, 5000);
+    };
+}
+
+function updateMetadataDisplay(metadata) {
+    const metadataContainer = document.getElementById('stream-metadata');
+    metadataContainer.innerHTML = `
+        <p>Radio : nightride.fm</p>
+        <p>Track: ${metadata.title}</p>
+        <p>Artist: ${metadata.artist}</p>
+    `;
 }
 
 document.addEventListener('DOMContentLoaded', async () => {
@@ -158,12 +166,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         initializePlayer();
         startAudio();
         startButton.style.display = 'none';
+	setupMetadataEventSource();
     });
 
-    document.addEventListener('keydown', function(event) {
-        if (event.code === 'Space') {
-            toggleAudio();
-            event.preventDefault();
-        }
-    });
 });

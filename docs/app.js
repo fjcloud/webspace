@@ -77,7 +77,7 @@ function loadVideo(container, videoId, startTime = 0) {
     embedUrl.searchParams.set('iv_load_policy', '3');
     embedUrl.searchParams.set('playsinline', '1');
     embedUrl.searchParams.set('enablejsapi', '1');
-    embedUrl.searchParams.set('cc_load_policy', '0');
+    embedUrl.searchParams.set('cc_load_policy', '3');
     embedUrl.searchParams.set('start', Math.floor(startTime).toString());
 
     iframe.src = embedUrl.toString();
@@ -134,10 +134,20 @@ function setupMetadataEventSource() {
     metadataEventSource = new EventSource('https://nightride.fm/meta');
 
     metadataEventSource.onmessage = function(event) {
-        const data = JSON.parse(event.data);
-        const ebsmData = data.find(item => item.station === 'ebsm');
-        if (ebsmData) {
-            updateMetadataDisplay(ebsmData);
+        try {
+            // Split the data by newline and parse each line separately
+            const dataLines = event.data.split('\n');
+            dataLines.forEach(line => {
+                if (line.trim() !== '') {
+                    const data = JSON.parse(line);
+                    const ebsmData = data.find(item => item.station === 'ebsm');
+                    if (ebsmData) {
+                        updateMetadataDisplay(ebsmData);
+                    }
+                }
+            });
+        } catch (error) {
+            console.error('Error parsing metadata:', error);
         }
     };
 

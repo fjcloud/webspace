@@ -134,20 +134,21 @@ function setupMetadataEventSource() {
     metadataEventSource = new EventSource('https://nightride.fm/meta');
 
     metadataEventSource.onmessage = function(event) {
+        // Ignore keepalive messages
+        if (event.data.trim() === 'keepalive') {
+            console.log('Received keepalive message');
+            return;
+        }
+
         try {
-            // Split the data by newline and parse each line separately
-            const dataLines = event.data.split('\n');
-            dataLines.forEach(line => {
-                if (line.trim() !== '') {
-                    const data = JSON.parse(line);
-                    const ebsmData = data.find(item => item.station === 'ebsm');
-                    if (ebsmData) {
-                        updateMetadataDisplay(ebsmData);
-                    }
-                }
-            });
+            const data = JSON.parse(event.data);
+            const ebsmData = data.find(item => item.station === 'ebsm');
+            if (ebsmData) {
+                updateMetadataDisplay(ebsmData);
+            }
         } catch (error) {
             console.error('Error parsing metadata:', error);
+            console.log('Received data:', event.data);
         }
     };
 
@@ -173,11 +174,13 @@ document.addEventListener('DOMContentLoaded', async () => {
     setupAudioPlayer();
 
     const startButton = document.getElementById('start-button');
+    const metadataContainer = document.getElementById('stream-metadata');
+
     startButton.addEventListener('click', () => {
         initializePlayer();
         startAudio();
         startButton.style.display = 'none';
-	setupMetadataEventSource();
+        metadataContainer.style.display = 'block'; // Show the metadata container
+        setupMetadataEventSource();
     });
-
 });

@@ -35,6 +35,9 @@ type VideoDetailsResponse struct {
 	Items []struct {
 		ContentDetails struct {
 			Duration string `json:"duration"`
+			RegionRestriction struct {
+				Blocked []string `json:"blocked"`
+			} `json:"regionRestriction"`
 		} `json:"contentDetails"`
 		Status struct {
 			Embeddable bool `json:"embeddable"`
@@ -165,7 +168,6 @@ func getVideoDetails(videoID, apiKey string) (*Video, error) {
 		return nil, fmt.Errorf("error reading response body: %v", err)
 	}
 
-	// Check if the response is not JSON
 	if !json.Valid(body) {
 		return nil, fmt.Errorf("invalid JSON response: %s", string(body))
 	}
@@ -187,12 +189,13 @@ func getVideoDetails(videoID, apiKey string) (*Video, error) {
 	}
 
 	isEmbeddable := item.Status.Embeddable
+	hasRegionRestriction := len(item.ContentDetails.RegionRestriction.Blocked) > 0
 
 	// We can't directly check for 1080p+ with this API call
 	// Assuming all videos are at least 1080p for simplicity
 	has1080pPlus := true
 
-	if !has1080pPlus || !isEmbeddable {
+	if !has1080pPlus || !isEmbeddable || hasRegionRestriction {
 		return nil, nil // Return nil if the video doesn't meet requirements
 	}
 

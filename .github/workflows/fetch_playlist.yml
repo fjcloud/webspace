@@ -1,0 +1,32 @@
+name: Update yt playlist
+
+on:
+  schedule:
+    - cron: '0 0 * * *'  # Run every hour
+  workflow_dispatch:  # Allow manual triggering
+
+jobs:
+  update-data:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        token: ${{ secrets.PAT }}
+
+    - name: Set up Go
+      uses: actions/setup-go@v2
+      with:
+        go-version: '1.23'
+
+    - name: Fetch yt playlist
+      run: go run fetch_playlist.go
+      env:
+        YT_PLAYLISTS: ${{ secrets.YT_PLAYLISTS }}
+        YT_API_KEY: ${{ secrets.YT_API_KEY }}
+
+    - name: Commit and push if changed
+      run: |
+        git config --global user.name 'GitHub Action'
+        git config --global user.email 'action@github.com'
+        git add docs/playlist.json
+        git diff --quiet && git diff --staged --quiet || (git commit -m "Update yt playlist" && git push)

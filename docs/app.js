@@ -21,13 +21,12 @@ function getPlaylistDuration() {
 }
 
 function initializePlayer() {
-    synchronizePlayback();
+    if (window.currentVideoTimeout) {
+        clearTimeout(window.currentVideoTimeout);
+    }
 
-    window.addEventListener('message', (event) => {
-        if (event.data && event.data.info === 'endVideoPlaying') {
-            playNextVideo();
-        }
-    });
+    synchronizePlayback();
+    scheduleNextVideo();
 }
 
 function synchronizePlayback() {
@@ -52,6 +51,41 @@ function synchronizePlayback() {
     
     const videoContainer = document.querySelector('.video-container');
     loadVideo(videoContainer, videoToPlay.id, secondsIntoVideo);
+}
+
+function scheduleNextVideo() {
+    if (!playlist || playlist.length === 0) {
+        console.error('Playlist is empty');
+        return;
+    }
+
+    const now = new Date();
+    const millisecondsSinceStart = now.getTime() - PLAYLIST_START_TIME;
+    const secondsSinceStart = Math.floor(millisecondsSinceStart / 1000);
+
+    const playlistDuration = getPlaylistDuration();
+    const secondsIntoCurrentLoop = secondsSinceStart % playlistDuration;
+
+    const currentVideo = playlist[currentVideoIndex];
+    const currentVideoEndTime = currentVideo.start_time + currentVideo.duration;
+
+    const timeUntilNext = (currentVideoEndTime - secondsIntoCurrentLoop) * 1000;
+
+    if (timeUntilNext < 0) {
+        console.log('Resynchronizing playback...');
+        synchronizePlayback(); // Resynchronise avec le bon timing
+        scheduleNextVideo();   // Replanifie le prochain changement
+        return;
+    }
+
+    console.log(`Planning next video in ${timeUntilNext/1000} seconds`);
+
+    const maxTimeout = Math.min(timeUntilNext, 2147483647);
+
+    window.currentVideoTimeout = setTimeout(() => {
+        playNextVideo();
+        scheduleNextVideo();
+    }, maxTimeout);
 }
 
 function loadVideo(container, videoId, startTime = 0) {

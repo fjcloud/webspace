@@ -14,7 +14,7 @@ import (
 
 type Video struct {
 	ID        string `json:"id"`
-	Duration  int    `json:"duration"`  // Duration in seconds
+	Duration  int    `json:"duration"`   // Duration in seconds
 	StartTime int    `json:"start_time"` // Start time in seconds
 }
 
@@ -36,8 +36,9 @@ type VideoDetailsResponse struct {
 		ContentDetails struct {
 			Duration string `json:"duration"`
 			Definition string `json:"definition"`
-			RegionRestriction struct {
+			RegionRestriction *struct {
 				Blocked []string `json:"blocked"`
+				Allowed []string `json:"allowed"`
 			} `json:"regionRestriction"`
 		} `json:"contentDetails"`
 		Status struct {
@@ -190,11 +191,16 @@ func getVideoDetails(videoID, apiKey string) (*Video, error) {
 	}
 
 	isEmbeddable := item.Status.Embeddable
-	hasRegionRestriction := len(item.ContentDetails.RegionRestriction.Blocked) > 0
 	isHD := item.ContentDetails.Definition == "hd"
+	
+	// Check if video has any region restrictions
+	hasRegionRestrictions := item.ContentDetails.RegionRestriction != nil
 
-	if !isHD || !isEmbeddable || hasRegionRestriction {
-		return nil, nil // Return nil if the video doesn't meet requirements
+	// Skip videos that don't meet our criteria
+	if !isHD || !isEmbeddable || hasRegionRestrictions {
+		log.Printf("Skipping video %s - HD: %v, Embeddable: %v, Has Region Restrictions: %v", 
+			videoID, isHD, isEmbeddable, hasRegionRestrictions)
+		return nil, nil
 	}
 
 	return &Video{

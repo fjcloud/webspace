@@ -76,15 +76,21 @@ class PlaylistController {
 class VideoPlayer {
   constructor(containerSelector) {
     this.container = document.querySelector(containerSelector);
+    this.playerReadyPromises = new Map();
   }
 
   loadVideo(videoId, startTime = 0) {
-    const existingIframe = this.container.querySelector('iframe');
-    if (existingIframe) {
-      existingIframe.remove();
+    const existingWrapper = this.container.querySelector('.video-wrapper');
+    if (existingWrapper) {
+      existingWrapper.remove();
     }
 
+    // Create wrapper
+    const wrapper = document.createElement('div');
+    wrapper.className = 'video-wrapper';
+
     const iframe = document.createElement('iframe');
+    iframe.id = `youtube-player-${videoId}`;
     iframe.allow = "accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share";
     iframe.allowFullscreen = true;
 
@@ -100,7 +106,13 @@ class VideoPlayer {
       iv_load_policy: '3',
       playsinline: '1',
       enablejsapi: '1',
-      start: Math.floor(startTime).toString()
+      start: Math.floor(startTime).toString(),
+      origin: window.location.origin,
+      widget_referrer: window.location.origin,
+      fs: '0',
+      cc_load_policy: '0',
+      annotations: '0',
+      disablekb: '1',
     };
 
     Object.entries(params).forEach(([key, value]) => {
@@ -108,15 +120,27 @@ class VideoPlayer {
     });
 
     iframe.src = embedUrl.toString();
-    Object.assign(iframe.style, {
-      position: 'absolute',
-      top: '0',
-      left: '0',
-      width: '100%',
-      height: '100%'
+
+    // Add elements to DOM
+    wrapper.appendChild(iframe);
+    this.container.appendChild(wrapper);
+
+    // Handle iframe load
+    iframe.addEventListener('load', () => {
+      // Short delay to ensure styles are applied
+      setTimeout(() => {
+        wrapper.classList.add('ready');
+      }, 100);
     });
 
-    this.container.appendChild(iframe);
+    // Clean up old promises after delay
+    setTimeout(() => {
+      this.playerReadyPromises.delete(videoId);
+    }, 10000);
+
+    return new Promise((resolve) => {
+      iframe.addEventListener('load', () => resolve());
+    });
   }
 }
 

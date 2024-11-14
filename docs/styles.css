@@ -1,0 +1,208 @@
+@import url('https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@300;400&display=swap');
+
+/* Reset and base styles */
+*, *::before, *::after {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body, html {
+    height: 100%;
+    overflow: hidden;
+    background-color: black;
+    color: #7fff7f;
+    font-family: 'Roboto Mono', monospace;
+}
+
+/* Video container and player styles */
+.video-container {
+    width: 100%;
+    height: 100vh;
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: black;
+}
+
+.video-wrapper {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+}
+
+/* Maintain 4:3 aspect ratio */
+.video-wrapper::before {
+    content: '';
+    display: block;
+    position: absolute;
+    width: 100vh * (4/3); /* 4:3 aspect ratio based on viewport height */
+    height: 100vh;
+    max-width: 100vw;
+    max-height: 75vw; /* 4:3 aspect ratio based on viewport width */
+    pointer-events: none;
+}
+
+.video-wrapper iframe {
+    position: absolute;
+    width: 133.333vh; /* 4:3 aspect ratio based on viewport height */
+    height: 100vh;
+    max-width: 100vw;
+    max-height: 75vw; /* 4:3 aspect ratio based on viewport width */
+    border: none;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    margin: auto;
+    pointer-events: none;
+    transform-origin: center;
+}
+
+/* Scale iframe for different viewport sizes while maintaining aspect ratio */
+@media (min-aspect-ratio: 4/3) {
+    .video-wrapper iframe {
+        width: 100vw;
+        height: 75vw;
+    }
+}
+
+@media (max-aspect-ratio: 4/3) {
+    .video-wrapper iframe {
+        width: 133.333vh;
+        height: 100vh;
+    }
+}
+
+.video-wrapper.ready iframe {
+    opacity: 1;
+}
+
+/* Hide YouTube elements */
+.ytp-chrome-top,
+.ytp-chrome-bottom,
+.ytp-gradient-top,
+.ytp-gradient-bottom,
+.ytp-show-cards-title,
+.ytp-watermark,
+.ytp-title,
+.ytp-show-info,
+.ytp-title-text,
+.ytp-title-link,
+.ytp-gradient-top,
+.ytp-gradient-bottom,
+.ytp-chrome-controls,
+.ytp-pause-overlay,
+.ytp-cued-thumbnail-overlay,
+.ytp-spinner,
+.ytp-player-content,
+.ytp-video-info-container {
+    display: none !important;
+    opacity: 0 !important;
+    visibility: hidden !important;
+}
+
+/* Start button styles */
+#start-button {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 1000;
+    width: 0;
+    height: 0;
+    border-style: solid;
+    border-width: 20px 0 20px 40px;
+    border-color: transparent transparent transparent rgba(127, 255, 127, 0.7);
+    background-color: transparent;
+    cursor: pointer;
+    transition: transform 0.3s ease;
+}
+
+#start-button:hover {
+    transform: translate(-50%, -50%) scale(1.1);
+}
+
+#start-button:focus {
+    outline: none;
+}
+
+#start-button:active {
+    transform: translate(-50%, -50%) scale(0.95);
+}
+
+/* Stream metadata styles */
+#stream-metadata {
+    position: absolute;
+    bottom: 15px;
+    left: 15px;
+    background-color: rgba(0, 0, 0, 0.4);
+    border: 1px solid rgba(127, 255, 127, 0.3);
+    padding: 8px;
+    z-index: 1001;
+    backdrop-filter: blur(3px);
+    box-shadow: 0 0 8px rgba(127, 255, 127, 0.2);
+    max-width: 250px;
+    display: none;
+    animation: fadeIn 0.3s ease-in-out;
+}
+
+#stream-metadata::before {
+    content: '';
+    position: absolute;
+    top: -3px;
+    left: -3px;
+    right: -3px;
+    bottom: -3px;
+    border: 1px solid rgba(127, 255, 127, 0.1);
+    pointer-events: none;
+}
+
+#stream-metadata p {
+    margin: 3px 0;
+    font-size: 12px;
+    line-height: 1.3;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+#stream-metadata p:first-child {
+    font-weight: 400;
+    color: rgba(127, 255, 127, 0.8);
+}
+
+#stream-metadata p:not(:first-child) {
+    font-weight: 300;
+}
+
+/* Animations */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Media queries for responsive design */
+@media (max-width: 768px) {
+    #stream-metadata {
+        max-width: 200px;
+        font-size: 11px;
+    }
+}
+
+@media (max-width: 480px) {
+    #stream-metadata {
+        left: 10px;
+        bottom: 10px;
+        max-width: calc(100% - 20px);
+    }
+}

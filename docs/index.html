@@ -3,96 +3,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Webradio Dot Space - An immersive audio-visual experience">
     <title>Webradio Dot Space</title>
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@300;400&display=swap');
-        body, html {
-            margin: 0;
-            padding: 0;
-            height: 100%;
-            overflow: hidden;
-            background-color: black;
-            color: #7fff7f;
-            font-family: 'Roboto Mono', monospace;
-        }
-        .video-container {
-            width: 100%;
-            height: 100vh;
-            position: relative;
-            overflow: hidden;
-        }
-        .video-container iframe {
-            width: 300%;
-            height: 300%;
-            border: none;
-            position: absolute;
-            top: -100%;
-            left: -100%;
-            pointer-events: none;
-        }
-        #start-button {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            z-index: 1000;
-            width: 0;
-            height: 0;
-            border-style: solid;
-            border-width: 20px 0 20px 40px;
-            border-color: transparent transparent transparent rgba(127, 255, 127, 0.7);
-            background-color: transparent;
-            cursor: pointer;
-            transition: transform 0.3s ease;
-        }
-        #start-button:hover {
-            transform: translate(-50%, -50%) scale(1.1);
-        }
-        #start-button:focus {
-            outline: none;
-        }
-	#stream-metadata {
-            position: absolute;
-            bottom: 15px;
-            left: 15px;
-            background-color: rgba(0, 0, 0, 0.4);
-            border: 1px solid rgba(127, 255, 127, 0.3);
-            padding: 8px;
-            z-index: 1001;
-            backdrop-filter: blur(3px);
-            box-shadow: 0 0 8px rgba(127, 255, 127, 0.2);
-            max-width: 250px;
-            display: none; /* Hide the metadata container initially */
-        }
-        #stream-metadata::before {
-            content: '';
-            position: absolute;
-            top: -3px;
-            left: -3px;
-            right: -3px;
-            bottom: -3px;
-            border: 1px solid rgba(127, 255, 127, 0.1);
-            pointer-events: none;
-        }
-        #stream-metadata p {
-            margin: 3px 0;
-            font-size: 12px;
-            line-height: 1.3;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-        #stream-metadata p:first-child {
-            font-weight: 400;
-        }
-        #stream-metadata p:last-child {
-            font-weight: 400;
-        }
-    </style>
+    <link rel="stylesheet" href="styles.css">
 </head>
 <body>
     <div class="video-container"></div>
-    <button id="start-button" aria-label="Start"></button>
-    <div id="stream-metadata"></div>
+    <button id="start-button" aria-label="Start playback"></button>
+    <div id="stream-metadata" role="region" aria-live="polite"></div>
+    
+    <!-- Scripts -->
     <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
     <script src="app.js"></script>
 </body>

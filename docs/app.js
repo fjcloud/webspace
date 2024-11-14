@@ -1,219 +1,278 @@
-let playlist = [];
-let currentVideoIndex = 0;
-let audioPlayer;
+// Constants
+const CONFIG = {
+  PLAYLIST_START_TIME: new Date('2024-01-01T00:00:00Z').getTime(),
+  RADIO_STREAM_URL: 'https://stream.nightride.fm:8443/ebsm/ebsm.m3u8',
+  METADATA_URL: 'https://nightride.fm/meta',
+  MAX_TIMEOUT: 2147483647, // Maximum safe timeout value
+};
 
-const PLAYLIST_START_TIME = new Date('2024-01-01T00:00:00Z').getTime();
+// Types (for documentation and IDE support)
+/**
+ * @typedef {Object} Video
+ * @property {string} id
+ * @property {number} start_time
+ * @property {number} duration
+ */
 
-async function loadPlaylist() {
+/**
+ * @typedef {Object} RadioMetadata
+ * @property {string} station
+ * @property {string} title
+ * @property {string} artist
+ */
+
+// Playlist Controller
+class PlaylistController {
+  constructor() {
+    this.playlist = [];
+    this.currentVideoIndex = 0;
+    this.currentVideoTimeout = null;
+  }
+
+  async loadPlaylist() {
     try {
-        const response = await fetch('playlist.json');
-        const data = await response.json();
-        playlist = data.videos;
-        console.log('Playlist loaded:', playlist);
+      const response = await fetch('playlist.json');
+      const data = await response.json();
+      this.playlist = data.videos;
+      console.log('Playlist loaded:', this.playlist);
+      return true;
     } catch (error) {
-        console.error('Error loading playlist:', error);
+      console.error('Error loading playlist:', error);
+      return false;
     }
-}
+  }
 
-function getPlaylistDuration() {
-    const lastVideo = playlist[playlist.length - 1];
+  getPlaylistDuration() {
+    const lastVideo = this.playlist[this.playlist.length - 1];
     return lastVideo.start_time + lastVideo.duration;
-}
+  }
 
-function initializePlayer() {
-    if (window.currentVideoTimeout) {
-        clearTimeout(window.currentVideoTimeout);
-    }
-
-    synchronizePlayback();
-    scheduleNextVideo();
-}
-
-function synchronizePlayback() {
-    const now = new Date();
-    const millisecondsSinceStart = now.getTime() - PLAYLIST_START_TIME;
+  getCurrentPlaybackInfo() {
+    const now = new Date().getTime();
+    const millisecondsSinceStart = now - CONFIG.PLAYLIST_START_TIME;
     const secondsSinceStart = Math.floor(millisecondsSinceStart / 1000);
-    
-    const playlistDuration = getPlaylistDuration();
+    const playlistDuration = this.getPlaylistDuration();
     const secondsIntoCurrentLoop = secondsSinceStart % playlistDuration;
 
-    let videoToPlay = playlist[0];
-    for (let i = 0; i < playlist.length; i++) {
-        if (secondsIntoCurrentLoop >= playlist[i].start_time) {
-            videoToPlay = playlist[i];
-            currentVideoIndex = i;
-        } else {
-            break;
-        }
+    let videoToPlay = this.playlist[0];
+    for (let i = 0; i < this.playlist.length; i++) {
+      if (secondsIntoCurrentLoop >= this.playlist[i].start_time) {
+        videoToPlay = this.playlist[i];
+        this.currentVideoIndex = i;
+      } else {
+        break;
+      }
     }
 
-    const secondsIntoVideo = secondsIntoCurrentLoop - videoToPlay.start_time;
-    
-    const videoContainer = document.querySelector('.video-container');
-    loadVideo(videoContainer, videoToPlay.id, secondsIntoVideo);
+    return {
+      video: videoToPlay,
+      secondsIntoVideo: secondsIntoCurrentLoop - videoToPlay.start_time,
+      timeUntilNext: (videoToPlay.start_time + videoToPlay.duration - secondsIntoCurrentLoop) * 1000
+    };
+  }
 }
 
-function scheduleNextVideo() {
-    if (!playlist || playlist.length === 0) {
-        console.error('Playlist is empty');
-        return;
-    }
+// Video Player
+class VideoPlayer {
+  constructor(containerSelector) {
+    this.container = document.querySelector(containerSelector);
+  }
 
-    const now = new Date();
-    const millisecondsSinceStart = now.getTime() - PLAYLIST_START_TIME;
-    const secondsSinceStart = Math.floor(millisecondsSinceStart / 1000);
-
-    const playlistDuration = getPlaylistDuration();
-    const secondsIntoCurrentLoop = secondsSinceStart % playlistDuration;
-
-    const currentVideo = playlist[currentVideoIndex];
-    const currentVideoEndTime = currentVideo.start_time + currentVideo.duration;
-
-    const timeUntilNext = (currentVideoEndTime - secondsIntoCurrentLoop) * 1000;
-
-    if (timeUntilNext < 0) {
-        console.log('Resynchronizing playback...');
-        synchronizePlayback(); // Resynchronise avec le bon timing
-        scheduleNextVideo();   // Replanifie le prochain changement
-        return;
-    }
-
-    console.log(`Planning next video in ${timeUntilNext/1000} seconds`);
-
-    const maxTimeout = Math.min(timeUntilNext, 2147483647);
-
-    window.currentVideoTimeout = setTimeout(() => {
-        playNextVideo();
-        scheduleNextVideo();
-    }, maxTimeout);
-}
-
-function loadVideo(container, videoId, startTime = 0) {
-    // Remove any existing iframe
-    const existingIframe = container.querySelector('iframe');
+  loadVideo(videoId, startTime = 0) {
+    const existingIframe = this.container.querySelector('iframe');
     if (existingIframe) {
-        existingIframe.remove();
+      existingIframe.remove();
     }
 
-    // Create a new iframe
     const iframe = document.createElement('iframe');
     iframe.allow = "accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share";
     iframe.allowFullscreen = true;
 
     const embedUrl = new URL('https://cdpn.io/pen/debug/oNPzxKo');
-    embedUrl.searchParams.set('v', videoId);
-    embedUrl.searchParams.set('autoplay', '1');
-    embedUrl.searchParams.set('controls', '0');
-    embedUrl.searchParams.set('mute', '1');
-    embedUrl.searchParams.set('modestbranding', '1');
-    embedUrl.searchParams.set('rel', '0');
-    embedUrl.searchParams.set('showinfo', '0');
-    embedUrl.searchParams.set('iv_load_policy', '3');
-    embedUrl.searchParams.set('playsinline', '1');
-    embedUrl.searchParams.set('enablejsapi', '1');
-    embedUrl.searchParams.set('start', Math.floor(startTime).toString());
+    const params = {
+      v: videoId,
+      autoplay: '1',
+      controls: '0',
+      mute: '1',
+      modestbranding: '1',
+      rel: '0',
+      showinfo: '0',
+      iv_load_policy: '3',
+      playsinline: '1',
+      enablejsapi: '1',
+      start: Math.floor(startTime).toString()
+    };
+
+    Object.entries(params).forEach(([key, value]) => {
+      embedUrl.searchParams.set(key, value);
+    });
 
     iframe.src = embedUrl.toString();
-
-    // Set iframe styles
-    iframe.style.position = 'absolute';
-    iframe.style.top = '0';
-    iframe.style.left = '0';
-    iframe.style.width = '100%';
-    iframe.style.height = '100%';
-
-    // Append the new iframe to the container
-    container.appendChild(iframe);
-}
-
-function playNextVideo() {
-    currentVideoIndex = (currentVideoIndex + 1) % playlist.length;
-    const videoContainer = document.querySelector('.video-container');
-    loadVideo(videoContainer, playlist[currentVideoIndex].id);
-}
-
-function setupAudioPlayer() {
-    if (Hls.isSupported()) {
-        audioPlayer = new Hls();
-        audioPlayer.loadSource('https://stream.nightride.fm:8443/ebsm/ebsm.m3u8');
-        audioPlayer.attachMedia(document.createElement('audio'));
-        audioPlayer.on(Hls.Events.MANIFEST_PARSED, function() {
-            console.log('HLS manifest loaded');
-        });
-    } else if (audio.canPlayType('application/vnd.apple.mpegurl')) {
-        audioPlayer = document.createElement('audio');
-        audioPlayer.src = 'https://stream.nightride.fm:8443/ebsm/ebsm.m3u8';
-        audioPlayer.addEventListener('loadedmetadata', function() {
-            console.log('HLS audio loaded');
-        });
-    } else {
-        console.error('HLS is not supported on this browser');
-    }
-}
-
-function startAudio() {
-    if (audioPlayer instanceof Hls) {
-        audioPlayer.media.play().catch(error => {
-            console.log('Audio playback failed:', error);
-        });
-    } else if (audioPlayer instanceof HTMLAudioElement) {
-        audioPlayer.play().catch(error => {
-            console.log('Audio playback failed:', error);
-        });
-    }
-}
-
-function setupMetadataEventSource() {
-    metadataEventSource = new EventSource('https://nightride.fm/meta');
-
-    metadataEventSource.onmessage = function(event) {
-        // Ignore keepalive messages
-        if (event.data.trim() === 'keepalive') {
-            console.log('Received keepalive message');
-            return;
-        }
-
-        try {
-            const data = JSON.parse(event.data);
-            const ebsmData = data.find(item => item.station === 'ebsm');
-            if (ebsmData) {
-                updateMetadataDisplay(ebsmData);
-            }
-        } catch (error) {
-            console.error('Error parsing metadata:', error);
-            console.log('Received data:', event.data);
-        }
-    };
-
-    metadataEventSource.onerror = function(error) {
-        console.error('EventSource failed:', error);
-        metadataEventSource.close();
-        // Attempt to reconnect after a delay
-        setTimeout(setupMetadataEventSource, 5000);
-    };
-}
-
-function updateMetadataDisplay(metadata) {
-    const metadataContainer = document.getElementById('stream-metadata');
-    metadataContainer.innerHTML = `
-        <p>Radio : nightride.fm</p>
-        <p>Track : ${metadata.title}</p>
-        <p>Artist: ${metadata.artist}</p>
-    `;
-}
-
-document.addEventListener('DOMContentLoaded', async () => {
-    await loadPlaylist();
-    setupAudioPlayer();
-
-    const startButton = document.getElementById('start-button');
-    const metadataContainer = document.getElementById('stream-metadata');
-
-    startButton.addEventListener('click', () => {
-        initializePlayer();
-        startAudio();
-        startButton.style.display = 'none';
-        metadataContainer.style.display = 'block'; // Show the metadata container
-        setupMetadataEventSource();
+    Object.assign(iframe.style, {
+      position: 'absolute',
+      top: '0',
+      left: '0',
+      width: '100%',
+      height: '100%'
     });
+
+    this.container.appendChild(iframe);
+  }
+}
+
+// Audio Player
+class AudioPlayer {
+  constructor() {
+    this.player = null;
+  }
+
+  setup() {
+    if (Hls.isSupported()) {
+      this.player = new Hls();
+      this.player.loadSource(CONFIG.RADIO_STREAM_URL);
+      const audioElement = document.createElement('audio');
+      this.player.attachMedia(audioElement);
+      this.player.on(Hls.Events.MANIFEST_PARSED, () => {
+        console.log('HLS manifest loaded');
+      });
+    } else if (audio.canPlayType('application/vnd.apple.mpegurl')) {
+      this.player = document.createElement('audio');
+      this.player.src = CONFIG.RADIO_STREAM_URL;
+      this.player.addEventListener('loadedmetadata', () => {
+        console.log('HLS audio loaded');
+      });
+    } else {
+      console.error('HLS is not supported on this browser');
+    }
+  }
+
+  async start() {
+    try {
+      if (this.player instanceof Hls) {
+        await this.player.media.play();
+      } else if (this.player instanceof HTMLAudioElement) {
+        await this.player.play();
+      }
+    } catch (error) {
+      console.error('Audio playback failed:', error);
+    }
+  }
+}
+
+// Metadata Controller
+class MetadataController {
+  constructor(containerId) {
+    this.container = document.getElementById(containerId);
+    this.eventSource = null;
+  }
+
+  setupEventSource() {
+    this.eventSource = new EventSource(CONFIG.METADATA_URL);
+
+    this.eventSource.onmessage = (event) => {
+      if (event.data.trim() === 'keepalive') {
+        console.log('Received keepalive message');
+        return;
+      }
+
+      try {
+        const data = JSON.parse(event.data);
+        const ebsmData = data.find(item => item.station === 'ebsm');
+        if (ebsmData) {
+          this.updateDisplay(ebsmData);
+        }
+      } catch (error) {
+        console.error('Error parsing metadata:', error);
+      }
+    };
+
+    this.eventSource.onerror = (error) => {
+      console.error('EventSource failed:', error);
+      this.eventSource.close();
+      setTimeout(() => this.setupEventSource(), 5000);
+    };
+  }
+
+  updateDisplay(metadata) {
+    this.container.innerHTML = `
+      <p>Radio : nightride.fm</p>
+      <p>Track : ${metadata.title}</p>
+      <p>Artist: ${metadata.artist}</p>
+    `;
+  }
+
+  show() {
+    this.container.style.display = 'block';
+  }
+}
+
+// Main Application
+class App {
+  constructor() {
+    this.playlistController = new PlaylistController();
+    this.videoPlayer = new VideoPlayer('.video-container');
+    this.audioPlayer = new AudioPlayer();
+    this.metadataController = new MetadataController('stream-metadata');
+    this.isPlaying = false;
+  }
+
+  async initialize() {
+    await this.playlistController.loadPlaylist();
+    this.audioPlayer.setup();
+    this.setupEventListeners();
+  }
+
+  setupEventListeners() {
+    const startButton = document.getElementById('start-button');
+    startButton.addEventListener('click', () => this.start());
+  }
+
+  start() {
+    if (this.isPlaying) return;
+    this.isPlaying = true;
+
+    this.synchronizePlayback();
+    this.scheduleNextVideo();
+    this.audioPlayer.start();
+    this.metadataController.show();
+    this.metadataController.setupEventSource();
+
+    document.getElementById('start-button').style.display = 'none';
+  }
+
+  synchronizePlayback() {
+    const { video, secondsIntoVideo } = this.playlistController.getCurrentPlaybackInfo();
+    this.videoPlayer.loadVideo(video.id, secondsIntoVideo);
+  }
+
+  scheduleNextVideo() {
+    if (this.playlistController.currentVideoTimeout) {
+      clearTimeout(this.playlistController.currentVideoTimeout);
+    }
+
+    const { timeUntilNext } = this.playlistController.getCurrentPlaybackInfo();
+    if (timeUntilNext < 0) {
+      this.synchronizePlayback();
+      this.scheduleNextVideo();
+      return;
+    }
+
+    const timeout = Math.min(timeUntilNext, CONFIG.MAX_TIMEOUT);
+    this.playlistController.currentVideoTimeout = setTimeout(() => {
+      this.playNextVideo();
+      this.scheduleNextVideo();
+    }, timeout);
+  }
+
+  playNextVideo() {
+    const nextIndex = (this.playlistController.currentVideoIndex + 1) % this.playlistController.playlist.length;
+    this.playlistController.currentVideoIndex = nextIndex;
+    this.videoPlayer.loadVideo(this.playlistController.playlist[nextIndex].id);
+  }
+}
+
+// Application initialization
+document.addEventListener('DOMContentLoaded', async () => {
+  const app = new App();
+  await app.initialize();
 });

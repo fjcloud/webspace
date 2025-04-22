@@ -1,44 +1,44 @@
 {
   "videos": [
     {
-      "id": "aKkoHKaueAY",
-      "duration": 5450,
-      "start_time": 0
-    },
-    {
-      "id": "LGUx5lHotuU",
-      "duration": 4806,
-      "start_time": 5450
-    },
-    {
-      "id": "iDJ-37sOs44",
-      "duration": 5023,
-      "start_time": 10256
-    },
-    {
-      "id": "o8ECHqq-9pk",
-      "duration": 7378,
-      "start_time": 15279
-    },
-    {
-      "id": "IFPTC07wK9M",
-      "duration": 5378,
-      "start_time": 22657
-    },
-    {
-      "id": "5s_jVeHD-vI",
-      "duration": 5046,
-      "start_time": 28035
-    },
-    {
       "id": "hrCFEq6mVY8",
       "duration": 10617,
-      "start_time": 33081
+      "start_time": 0
     },
     {
       "id": "LcYxpyqjCyQ",
       "duration": 5561,
-      "start_time": 43698
+      "start_time": 10617
+    },
+    {
+      "id": "aKkoHKaueAY",
+      "duration": 5450,
+      "start_time": 16178
+    },
+    {
+      "id": "LGUx5lHotuU",
+      "duration": 4806,
+      "start_time": 21628
+    },
+    {
+      "id": "iDJ-37sOs44",
+      "duration": 5023,
+      "start_time": 26434
+    },
+    {
+      "id": "o8ECHqq-9pk",
+      "duration": 7378,
+      "start_time": 31457
+    },
+    {
+      "id": "IFPTC07wK9M",
+      "duration": 5378,
+      "start_time": 38835
+    },
+    {
+      "id": "5s_jVeHD-vI",
+      "duration": 5046,
+      "start_time": 44213
     },
     {
       "id": "80L40uS57do",

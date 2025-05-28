@@ -1,29 +1,29 @@
 {
   "videos": [
     {
-      "id": "AF09RsbvybI",
-      "duration": 6500,
+      "id": "X5LjKl7pkqM",
+      "duration": 8244,
       "start_time": 0
-    },
-    {
-      "id": "YP2gId2xO-Q",
-      "duration": 5312,
-      "start_time": 6500
-    },
-    {
-      "id": "6smI4-bwBDQ",
-      "duration": 6361,
-      "start_time": 11812
     },
     {
       "id": "m_m4YKnWjdg",
       "duration": 8697,
-      "start_time": 18173
+      "start_time": 8244
     },
     {
-      "id": "X5LjKl7pkqM",
-      "duration": 8244,
-      "start_time": 26870
+      "id": "YP2gId2xO-Q",
+      "duration": 5312,
+      "start_time": 16941
+    },
+    {
+      "id": "AF09RsbvybI",
+      "duration": 6500,
+      "start_time": 22253
+    },
+    {
+      "id": "6smI4-bwBDQ",
+      "duration": 6361,
+      "start_time": 28753
     },
     {
       "id": "N1pvNfjpTVs",

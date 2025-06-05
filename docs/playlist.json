@@ -1,19 +1,19 @@
 {
   "videos": [
     {
-      "id": "X5LjKl7pkqM",
-      "duration": 8244,
-      "start_time": 0
-    },
-    {
       "id": "m_m4YKnWjdg",
       "duration": 8697,
-      "start_time": 8244
+      "start_time": 0
     },
     {
       "id": "YP2gId2xO-Q",
       "duration": 5312,
-      "start_time": 16941
+      "start_time": 8697
+    },
+    {
+      "id": "X5LjKl7pkqM",
+      "duration": 8244,
+      "start_time": 14009
     },
     {
       "id": "AF09RsbvybI",

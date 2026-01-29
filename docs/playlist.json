@@ -1,64 +1,64 @@
 {
   "videos": [
     {
-      "id": "EQF1LWJeH10",
-      "duration": 5213,
-      "start_time": 0
-    },
-    {
       "id": "fUrt2zVNlzA",
       "duration": 7904,
-      "start_time": 5213
+      "start_time": 0
     },
     {
       "id": "nHyX-Y8fLog",
       "duration": 5411,
-      "start_time": 13117
-    },
-    {
-      "id": "cgTZX_Ko0uc",
-      "duration": 5737,
-      "start_time": 18528
-    },
-    {
-      "id": "hrCFEq6mVY8",
-      "duration": 10617,
-      "start_time": 24265
-    },
-    {
-      "id": "9rZeDI9jDYU",
-      "duration": 6407,
-      "start_time": 34882
-    },
-    {
-      "id": "y4xDPVRmQVY",
-      "duration": 4698,
-      "start_time": 41289
-    },
-    {
-      "id": "ZKC-5HHORpA",
-      "duration": 5578,
-      "start_time": 45987
-    },
-    {
-      "id": "RoXtGILD2VI",
-      "duration": 4858,
-      "start_time": 51565
-    },
-    {
-      "id": "L72C_kKiEZA",
-      "duration": 4737,
-      "start_time": 56423
+      "start_time": 7904
     },
     {
       "id": "m_m4YKnWjdg",
       "duration": 8697,
-      "start_time": 61160
+      "start_time": 13315
     },
     {
       "id": "YP2gId2xO-Q",
       "duration": 5312,
-      "start_time": 69857
+      "start_time": 22012
+    },
+    {
+      "id": "EQF1LWJeH10",
+      "duration": 5213,
+      "start_time": 27324
+    },
+    {
+      "id": "cgTZX_Ko0uc",
+      "duration": 5737,
+      "start_time": 32537
+    },
+    {
+      "id": "hrCFEq6mVY8",
+      "duration": 10617,
+      "start_time": 38274
+    },
+    {
+      "id": "9rZeDI9jDYU",
+      "duration": 6407,
+      "start_time": 48891
+    },
+    {
+      "id": "y4xDPVRmQVY",
+      "duration": 4698,
+      "start_time": 55298
+    },
+    {
+      "id": "ZKC-5HHORpA",
+      "duration": 5578,
+      "start_time": 59996
+    },
+    {
+      "id": "RoXtGILD2VI",
+      "duration": 4858,
+      "start_time": 65574
+    },
+    {
+      "id": "L72C_kKiEZA",
+      "duration": 4737,
+      "start_time": 70432
     },
     {
       "id": "X5LjKl7pkqM",

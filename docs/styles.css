@@ -191,6 +191,53 @@ body, html {
     }
 }
 
+/* PiP button */
+#pip-button {
+    position: absolute;
+    bottom: 15px;
+    right: 15px;
+    z-index: 1001;
+    background-color: rgba(0, 0, 0, 0.4);
+    border: 1px solid rgba(127, 255, 127, 0.3);
+    padding: 8px;
+    backdrop-filter: blur(3px);
+    box-shadow: 0 0 8px rgba(127, 255, 127, 0.2);
+    cursor: pointer;
+    transition: transform 0.2s ease;
+}
+
+#pip-button:focus {
+    outline: none;
+}
+
+#pip-button:hover {
+    transform: scale(1.1);
+}
+
+#pip-button:active {
+    transform: scale(0.95);
+}
+
+.pip-icon {
+    display: block;
+    width: 20px;
+    height: 14px;
+    border: 1.5px solid rgba(127, 255, 127, 0.7);
+    border-radius: 1px;
+    position: relative;
+}
+
+.pip-icon::after {
+    content: '';
+    position: absolute;
+    bottom: 1px;
+    right: 1px;
+    width: 8px;
+    height: 6px;
+    background: rgba(127, 255, 127, 0.7);
+    border-radius: 1px;
+}
+
 /* Media queries for responsive design */
 @media (max-width: 768px) {
     #stream-metadata {

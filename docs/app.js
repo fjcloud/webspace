@@ -223,6 +223,8 @@ class MetadataController {
       <p>Track : ${metadata.title}</p>
       <p>Artist: ${metadata.artist}</p>
     `;
+    this.lastMetadata = metadata;
+    if (this.onUpdate) this.onUpdate(metadata);
   }
 
   show() {
@@ -238,6 +240,7 @@ class App {
     this.audioPlayer = new AudioPlayer();
     this.metadataController = new MetadataController('stream-metadata');
     this.isPlaying = false;
+    this.pipWindow = null;
   }
 
   async initialize() {
@@ -260,8 +263,67 @@ class App {
     this.audioPlayer.start();
     this.metadataController.show();
     this.metadataController.setupEventSource();
+    this.metadataController.onUpdate = (m) => {
+      const el = this.pipWindow?.document.getElementById('pip-meta');
+      if (el) el.textContent = `${m.artist} — ${m.title}`;
+    };
 
     document.getElementById('start-button').style.display = 'none';
+
+    if ('documentPictureInPicture' in window) {
+      const pipButton = document.getElementById('pip-button');
+      pipButton.style.display = 'block';
+      pipButton.addEventListener('click', () => this.togglePictureInPicture());
+    }
+
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'visible' && this.isPlaying && !this.pipWindow) {
+        this.synchronizePlayback();
+        this.scheduleNextVideo();
+      }
+    });
+  }
+
+  async togglePictureInPicture() {
+    if (this.pipWindow) {
+      this.pipWindow.close();
+      return;
+    }
+
+    document.getElementById('pip-button').disabled = true;
+
+    const pipWindow = await documentPictureInPicture.requestWindow({
+      width: 400,
+      height: 300,
+    });
+
+    const style = pipWindow.document.createElement('style');
+    style.textContent = `
+      html, body { margin: 0; width: 100%; height: 100%; background: black; overflow: hidden; }
+      .video-wrapper { width: 100%; height: 100%; position: relative; overflow: hidden; display: flex; align-items: center; justify-content: center; }
+      .video-wrapper iframe { position: absolute; width: 133.333%; height: 133.333%; border: none; opacity: 0; transition: opacity 0.3s ease; pointer-events: none; }
+      .video-wrapper.ready iframe { opacity: 1; }
+      #pip-meta { position: fixed; bottom: 6px; left: 0; right: 0; text-align: center; font: 11px 'Roboto Mono', monospace; color: rgba(127,255,127,0.8); text-transform: uppercase; letter-spacing: 0.5px; text-shadow: 0 0 4px black; pointer-events: none; z-index: 1; }
+    `;
+    pipWindow.document.head.appendChild(style);
+
+    const meta = pipWindow.document.createElement('div');
+    meta.id = 'pip-meta';
+    const m = this.metadataController.lastMetadata;
+    if (m) meta.textContent = `${m.artist} — ${m.title}`;
+    pipWindow.document.body.appendChild(meta);
+
+    this.pipWindow = pipWindow;
+    this.videoPlayer.container = pipWindow.document.body;
+    this.synchronizePlayback();
+    document.getElementById('pip-button').disabled = false;
+
+    pipWindow.addEventListener('pagehide', () => {
+      this.pipWindow = null;
+      this.videoPlayer.container = document.querySelector('.video-container');
+      this.synchronizePlayback();
+      this.scheduleNextVideo();
+    });
   }
 
   synchronizePlayback() {

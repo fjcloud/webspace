@@ -321,7 +321,7 @@ class App {
     this.playlistController.currentVideoTimeout = setTimeout(() => {
       this.playNextVideo();
       this.scheduleNextVideo();
-    }, timeout);
+    }, timeUntilNext);
   }
 
   playNextVideo() {

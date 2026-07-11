@@ -1,9 +1,8 @@
 // Constants
 const CONFIG = {
   PLAYLIST_START_TIME: new Date('2024-01-01T00:00:00Z').getTime(),
-  RADIO_STREAM_URL: 'https://stream.nightride.fm/ebsm.mp3 ',
+  RADIO_STREAM_URL: 'https://stream.nightride.fm/ebsm.mp3',
   METADATA_URL: 'https://nightride.fm/meta',
-  MAX_TIMEOUT: 2147483647, // Maximum safe timeout value
 };
 
 // Types (for documentation and IDE support)
@@ -147,36 +146,13 @@ class VideoPlayer {
 // Audio Player
 class AudioPlayer {
   constructor() {
-    this.player = null;
-  }
-
-  setup() {
-    if (Hls.isSupported()) {
-      this.player = new Hls();
-      this.player.loadSource(CONFIG.RADIO_STREAM_URL);
-      const audioElement = document.createElement('audio');
-      this.player.attachMedia(audioElement);
-      this.player.on(Hls.Events.MANIFEST_PARSED, () => {
-        console.log('HLS manifest loaded');
-      });
-    } else if (audio.canPlayType('application/vnd.apple.mpegurl')) {
-      this.player = document.createElement('audio');
-      this.player.src = CONFIG.RADIO_STREAM_URL;
-      this.player.addEventListener('loadedmetadata', () => {
-        console.log('HLS audio loaded');
-      });
-    } else {
-      console.error('HLS is not supported on this browser');
-    }
+    this.player = document.createElement('audio');
+    this.player.src = CONFIG.RADIO_STREAM_URL;
   }
 
   async start() {
     try {
-      if (this.player instanceof Hls) {
-        await this.player.media.play();
-      } else if (this.player instanceof HTMLAudioElement) {
-        await this.player.play();
-      }
+      await this.player.play();
     } catch (error) {
       console.error('Audio playback failed:', error);
     }
@@ -245,7 +221,6 @@ class App {
 
   async initialize() {
     await this.playlistController.loadPlaylist();
-    this.audioPlayer.setup();
     this.setupEventListeners();
   }
 
@@ -343,7 +318,6 @@ class App {
       return;
     }
 
-    const timeout = Math.min(timeUntilNext, CONFIG.MAX_TIMEOUT);
     this.playlistController.currentVideoTimeout = setTimeout(() => {
       this.playNextVideo();
       this.scheduleNextVideo();

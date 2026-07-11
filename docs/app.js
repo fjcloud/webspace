@@ -1,7 +1,7 @@
 // Constants
 const CONFIG = {
   PLAYLIST_START_TIME: new Date('2024-01-01T00:00:00Z').getTime(),
-  RADIO_STREAM_URL: 'https://stream.nightride.fm:8443/ebsm/ebsm.m3u8',
+  RADIO_STREAM_URL: 'https://stream.nightride.fm/ebsm.mp3 ',
   METADATA_URL: 'https://nightride.fm/meta',
   MAX_TIMEOUT: 2147483647, // Maximum safe timeout value
 };

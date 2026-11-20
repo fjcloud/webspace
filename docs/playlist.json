@@ -1,19 +1,19 @@
 {
   "videos": [
     {
-      "id": "RoXtGILD2VI",
-      "duration": 4858,
-      "start_time": 0
-    },
-    {
       "id": "bSHrIk2hVpQ",
       "duration": 643,
-      "start_time": 4858
+      "start_time": 0
     },
     {
       "id": "qy8H0rTYgys",
       "duration": 585,
-      "start_time": 5501
+      "start_time": 643
+    },
+    {
+      "id": "RoXtGILD2VI",
+      "duration": 4858,
+      "start_time": 1228
     },
     {
       "id": "X5LjKl7pkqM",
